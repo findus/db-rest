@@ -1,0 +1,52 @@
+name: test, build, push and deploy
+on:
+  push:
+    branches: [ "5", "k8s" ]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm i
+    - run: npm test
+      env:
+        CI: true
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: build container image
+      run: docker build -t publictransport/$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 -):$(echo $GITHUB_SHA | head -c7) .
+
+    - name: docker Login
+      env:
+        DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      run: echo $DOCKER_ACCESS_TOKEN | docker login -u derhuerst --password-stdin
+
+    - name: push image to Docker Hub
+      run: docker push publictransport/$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 -)
+
+    - name: update kubernetes file
+      run: TAG=$(echo $GITHUB_SHA | head -c7) && REPO=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 -) && sed -i "s|<IMAGE>|publictransport/$REPO:$TAG|" $GITHUB_WORKSPACE/kubernetes.yaml
+
+    - name: setup kubeconfig
+      env:
+        KUBERNETES_CONFIG: ${{ secrets.KUBERNETES_CONFIG }}
+      run:
+        echo $KUBERNETES_CONFIG | base64 --decode > $GITHUB_WORKSPACE/.kubeconfig
+
+    - name: deploy to Kubernetes
+      run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f $GITHUB_WORKSPACE/kubernetes.yaml
+
+    - name: verify deployment
+      run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig rollout status deployment/db-rest-v5 --namespace derhuerst

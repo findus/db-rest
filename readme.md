@@ -7,6 +7,7 @@
 ![db-rest architecture diagram](architecture.svg)
 
 [![Docker build status](https://img.shields.io/docker/build/derhuerst/db-rest.svg)](https://hub.docker.com/r/derhuerst/db-rest/)
+[![deployment status](https://github.com/derhuersr/db-rest/workflows/test,%20build,%20push%20and%20deploy/badge.svg)](https://github.com/derhuerst/db-rest/actions?query=workflow%3A%22test%2C+build%2C+push+and+deploy%22)
 [![dependency status](https://img.shields.io/david/derhuerst/db-rest.svg)](https://david-dm.org/derhuerst/db-rest)
 ![ISC-licensed](https://img.shields.io/github/license/derhuerst/db-rest.svg)
 [![gitter channel](https://badges.gitter.im/derhuerst/db-rest.svg)](https://gitter.im/derhuerst/db-rest)
