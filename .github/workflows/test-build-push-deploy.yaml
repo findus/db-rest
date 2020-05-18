@@ -25,28 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: build container image
-      run: docker build -t publictransport/$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 -):$(echo $GITHUB_SHA | head -c7) .
-
-    - name: docker Login
-      env:
-        DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      run: echo $DOCKER_ACCESS_TOKEN | docker login -u derhuerst --password-stdin
-
-    - name: push image to Docker Hub
-      run: docker push publictransport/$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 -)
-
-    - name: update kubernetes file
-      run: TAG=$(echo $GITHUB_SHA | head -c7) && REPO=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 -) && sed -i "s|<IMAGE>|publictransport/$REPO:$TAG|" $GITHUB_WORKSPACE/kubernetes.yaml
-
-    - name: setup kubeconfig
-      env:
-        KUBERNETES_CONFIG: ${{ secrets.KUBERNETES_CONFIG }}
-      run:
-        echo $KUBERNETES_CONFIG | base64 --decode > $GITHUB_WORKSPACE/.kubeconfig
-
-    - name: deploy to Kubernetes
-      run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f $GITHUB_WORKSPACE/kubernetes.yaml
-
-    - name: verify deployment
-      run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig rollout status deployment/db-rest-v5 --namespace derhuerst
+    - uses: public-transport/kubernetes-setup/deploy-basic-service@gh-action
+      with:
+        docker-access-token: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+        kubernetes-config: ${{ secrets.KUBERNETES_CONFIG }}
