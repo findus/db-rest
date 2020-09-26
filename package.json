@@ -24,7 +24,7 @@
 	"dependencies": {
 		"cached-hafas-client": "^3.1.1",
 		"cli-native": "^1.0.0",
-		"db-hafas": "^5.0.2",
+		"db-hafas": "git://github.com/findus/db-hafas#7a286c708dcf940a7f48e4ae2467d202a8d8230f",
 		"db-stations": "^3.0.0",
 		"db-stations-autocomplete": "^2.2.0",
 		"etag": "^1.8.1",
